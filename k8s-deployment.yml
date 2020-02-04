@@ -1,0 +1,49 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: go-kubernetes
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: go-kubernetes
+  template:
+    metadata:
+      labels:
+        app: go-kubernetes
+    spec:
+      containers:
+      - name: go-kubernetes
+        image: petehouston/go-kubernetes:1.0.0
+        imagePullPolicy: IfNotPresent
+        ports:
+          - containerPort: 8080
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+            scheme: HTTP
+          initialDelaySeconds: 5
+          periodSeconds: 15
+          timeoutSeconds: 5
+        readinessProbe:
+          httpGet:
+            path: /readiness
+            port: 8080
+            scheme: HTTP
+          initialDelaySeconds: 5
+          timeoutSeconds: 1
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: go-kubernetes-service
+spec:
+  type: NodePort
+  ports:
+  - name: http
+    port: 9090
+    targetPort: 8080
+  selector:
+    app: go-kubernetes
